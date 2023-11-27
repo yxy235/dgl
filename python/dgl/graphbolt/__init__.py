@@ -21,7 +21,7 @@ from .subgraph_sampler import *
 from .internal import (
     compact_csc_format,
     unique_and_compact,
-    unique_and_compact_node_pairs,
+    unique_and_compact_csc_formats,
 )
 from .utils import add_reverse_edges, exclude_seed_edges
 

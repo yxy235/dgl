@@ -3,7 +3,7 @@
 import torch
 from torch.utils.data import functional_datapipe
 
-from ..internal import compact_csc_format, unique_and_compact_node_pairs
+from ..internal import compact_csc_format, unique_and_compact_csc_formats
 
 from ..subgraph_sampler import SubgraphSampler
 from .sampled_subgraph_impl import FusedSampledSubgraphImpl, SampledSubgraphImpl
@@ -116,34 +116,23 @@ class NeighborSampler(SubgraphSampler):
                 self.fanouts[hop],
                 self.replace,
                 self.prob_name,
-                self.deduplicate,
             )
             if self.deduplicate:
                 (
                     original_row_node_ids,
-                    compacted_node_pairs,
-                ) = unique_and_compact_node_pairs(subgraph.node_pairs, seeds)
-                subgraph = FusedSampledSubgraphImpl(
-                    node_pairs=compacted_node_pairs,
-                    original_column_node_ids=seeds,
-                    original_row_node_ids=original_row_node_ids,
-                    original_edge_ids=subgraph.original_edge_ids,
-                )
+                    compacted_csc_format,
+                ) = unique_and_compact_csc_formats(subgraph.node_pairs, seeds)
             else:
                 (
                     original_row_node_ids,
                     compacted_csc_format,
                 ) = compact_csc_format(subgraph.node_pairs, seeds)
-                # [TODO] For node_pairs is defined in SampledSubgraph, which is
-                # SampledSubgraph's parent class, and it's still inherited by
-                # other classes, the name cannot be changed currently. This
-                # part will be cleaned up later.
-                subgraph = SampledSubgraphImpl(
-                    node_pairs=compacted_csc_format,
-                    original_column_node_ids=seeds,
-                    original_row_node_ids=original_row_node_ids,
-                    original_edge_ids=subgraph.original_edge_ids,
-                )
+            subgraph = SampledSubgraphImpl(
+                node_pairs=compacted_csc_format,
+                original_column_node_ids=seeds,
+                original_row_node_ids=original_row_node_ids,
+                original_edge_ids=subgraph.original_edge_ids,
+            )
             subgraphs.insert(0, subgraph)
             seeds = original_row_node_ids
         return seeds, subgraphs

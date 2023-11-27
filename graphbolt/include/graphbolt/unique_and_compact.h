@@ -46,9 +46,8 @@ namespace sampling {
  *   torch::Tensor compacted_src_ids = std::get<1>(result);
  *   torch::Tensor compacted_dst_ids = std::get<2>(result);
  */
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> UniqueAndCompact(
-    const torch::Tensor& src_ids, const torch::Tensor& dst_ids,
-    const torch::Tensor unique_dst_ids);
+std::tuple<torch::Tensor, torch::Tensor> UniqueAndCompact(
+    const torch::Tensor& indices, const torch::Tensor unique_dst_ids);
 
 }  // namespace sampling
 }  // namespace graphbolt
