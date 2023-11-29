@@ -44,8 +44,8 @@ def unique_and_compact(
         nums = [node.size(0) for node in nodes]
         nodes = torch.cat(nodes)
         empty_tensor = nodes.new_empty(0)
-        unique, compacted, _ = torch.ops.graphbolt.unique_and_compact(
-            nodes, empty_tensor, empty_tensor
+        unique, compacted = torch.ops.graphbolt.unique_and_compact(
+            nodes, empty_tensor
         )
         compacted = compacted.split(nums)
         return unique, list(compacted)
@@ -117,9 +117,9 @@ def unique_and_compact_csc_formats(
     >>> print(unique_nodes)
     {'n1': tensor([1, 2]), 'n2': tensor([5, 6])}
     >>> print(compacted_csc_formats)
-    {"n1:e1:n2": CSCFormatBase(indptr=torch.tensor([0,2,3]),
+    {"n1:e1:n2": CSCFormatBase(indptr=torch.tensor([0, 2, 3]),
                                indices=torch.tensor([0, 1, 1])),
-     "n2:e2:n1": CSCFormatBase(indptr=torch.tensor([0,1,3]),
+     "n2:e2:n1": CSCFormatBase(indptr=torch.tensor([0, 1, 3]),
                                indices=torch.Longtensor([0, 0, 1]))}
     """
     is_homogeneous = not isinstance(csc_formats, dict)
@@ -155,7 +155,7 @@ def unique_and_compact_csc_formats(
     # Map back with the same order.
     for etype, csc_format in csc_formats.items():
         num_elem = csc_format.indices.size(0)
-        src_type, _, dst_type = etype_str_to_tuple(etype)
+        src_type, _, _ = etype_str_to_tuple(etype)
         indice = compacted_indices[src_type][:num_elem]
         indptr = csc_format.indptr
         compacted_csc_formats[etype] = CSCFormatBase(indptr=indptr, indices=indice)
