@@ -6,7 +6,7 @@ import torch
 
 from dgl.utils import recursive_apply
 
-from .base import apply_to, etype_str_to_tuple, isin
+from .base import apply_to, etype_str_to_tuple, isin, CSCFormatBase
 
 
 __all__ = ["SampledSubgraph"]
@@ -144,7 +144,7 @@ class SampledSubgraph:
         assert (
             assume_num_node_within_int32
         ), "Values > int32 are not supported yet."
-        assert isinstance(self.node_pairs, tuple) == isinstance(edges, tuple), (
+        assert isinstance(self.node_pairs, CSCFormatBase) == isinstance(edges, tuple), (
             "The sampled subgraph and the edges to exclude should be both "
             "homogeneous or both heterogeneous."
         )
@@ -155,7 +155,7 @@ class SampledSubgraph:
         # 1. Convert the node pairs to the original ids if they are compacted.
         # 2. Exclude the edges and get the index of the edges to keep.
         # 3. Slice the subgraph according to the index.
-        if isinstance(self.node_pairs, tuple):
+        if isinstance(self.node_pairs, CSCFormatBase):
             reverse_edges = _to_reverse_ids(
                 self.node_pairs,
                 self.original_row_node_ids,

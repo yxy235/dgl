@@ -239,13 +239,14 @@ def test_SubgraphSampler_Random_Hetero_Graph(labor):
         for sampledsubgraph in data.sampled_subgraphs:
             for _, value in sampledsubgraph.node_pairs.items():
                 assert torch.equal(
-                    torch.ge(value[0], torch.zeros(len(value[0]))),
-                    torch.ones(len(value[0])),
+                    torch.ge(value.indices, torch.zeros(len(value.indices))),
+                    torch.ones(len(value.indices)),
                 )
                 assert torch.equal(
-                    torch.ge(value[1], torch.zeros(len(value[1]))),
-                    torch.ones(len(value[1])),
+                    torch.ge(value.indptr, torch.zeros(len(value.indptr))),
+                    torch.ones(len(value.indptr)),
                 )
+                assert value.indptr[-1] == len(value.indices)
             for _, value in sampledsubgraph.original_column_node_ids.items():
                 assert torch.equal(
                     torch.ge(value, torch.zeros(len(value))),

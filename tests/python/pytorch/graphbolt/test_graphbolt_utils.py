@@ -116,7 +116,7 @@ def test_unique_and_compact_homo():
         assert torch.equal(expected_node, node)
 
 
-def test_unique_and_compact_node_pairs_hetero():
+def test_unique_and_compact_csc_formats_hetero():
     N1 = torch.randint(0, 50, (30,))
     N2 = torch.randint(0, 50, (20,))
     N3 = torch.randint(0, 50, (10,))
@@ -125,63 +125,66 @@ def test_unique_and_compact_node_pairs_hetero():
     unique_N3 = torch.unique(N3)
     expected_unique_nodes = {
         "n1": unique_N1,
-        "n2": unique_N2,
-        "n3": unique_N3,
+        "n2": N2,
+        "n3": N3,
     }
     node_pairs = {
-        "n1:e1:n2": (
-            N1[:20],
-            N2,
+        "n1:e1:n2": gb.CSCFormatBase(
+            indptr=torch.range(0, 21),
+            indices=N1[:20],
         ),
-        "n1:e2:n3": (
-            N1[20:30],
-            N3,
+        "n1:e2:n3": gb.CSCFormatBase(
+            indptr=torch.range(0, 11),
+            indices=N1[20:30],
         ),
-        "n2:e3:n3": (
-            N2[10:],
-            N3,
+        "n2:e3:n3": gb.CSCFormatBase(
+            indptr=torch.range(0, 11),
+            indices=N2[10:],
         ),
     }
 
-    unique_nodes, compacted_node_pairs = gb.unique_and_compact_node_pairs(
-        node_pairs
+    dst_nodes={
+        "n2": N2,
+        "n3": N3,
+    }
+
+    unique_nodes, compacted_node_pairs = gb.unique_and_compact_csc_formats(
+        node_pairs, dst_nodes
     )
     for ntype, nodes in unique_nodes.items():
         expected_nodes = expected_unique_nodes[ntype]
-        assert torch.equal(torch.sort(nodes)[0], expected_nodes)
+        assert torch.equal(torch.sort(nodes)[0], torch.sort(expected_nodes)[0])
     for etype, pair in compacted_node_pairs.items():
-        u, v = pair
-        u_type, _, v_type = gb.etype_str_to_tuple(etype)
-        u, v = unique_nodes[u_type][u], unique_nodes[v_type][v]
-        expected_u, expected_v = node_pairs[etype]
-        assert torch.equal(u, expected_u)
-        assert torch.equal(v, expected_v)
+        indices = pair.indices
+        indptr = pair.indptr
+        indices_type, _, _ = gb.etype_str_to_tuple(etype)
+        indices = unique_nodes[indices_type][indices]
+        expected_indices = node_pairs[etype].indices
+        expected_indptr = node_pairs[etype].indptr
+        assert torch.equal(indices, expected_indices)
+        assert torch.equal(indptr, expected_indptr)
 
 
-def test_unique_and_compact_node_pairs_homo():
-    N = torch.randint(0, 50, (200,))
-    expected_unique_N = torch.unique(N)
+def test_unique_and_compact_csc_formats_homo():
+    N = torch.cat((torch.arange(0, 10), torch.randint(10, 50, (190,))))
+    expected_original_row_ids = torch.unique(N)
 
-    node_pairs = tuple(N.split(100))
-    unique_nodes, compacted_node_pairs = gb.unique_and_compact_node_pairs(
-        node_pairs
+    csc_formats = gb.CSCFormatBase(
+        indptr=torch.arange(0, 191, 19), indices=N[10:]
     )
-    assert torch.equal(torch.sort(unique_nodes)[0], expected_unique_N)
-
-    u, v = compacted_node_pairs
-    u, v = unique_nodes[u], unique_nodes[v]
-    expected_u, expected_v = node_pairs
-    unique_v = torch.unique(expected_v)
-    assert torch.equal(u, expected_u)
-    assert torch.equal(v, expected_v)
-    assert torch.equal(unique_nodes[: unique_v.size(0)], unique_v)
-
-
-def test_incomplete_unique_dst_nodes_():
-    node_pairs = (torch.randint(0, 50, (50,)), torch.randint(100, 150, (50,)))
-    unique_dst_nodes = torch.arange(150, 200)
-    with pytest.raises(IndexError):
-        gb.unique_and_compact_node_pairs(node_pairs, unique_dst_nodes)
+    dst_nodes = N[:10]
+    unique_nodes, compacted_csc_formats = gb.unique_and_compact_csc_formats(
+        csc_formats, dst_nodes
+    )
+    print(unique_nodes.size())
+    print(expected_original_row_ids.size())
+    indptr = compacted_csc_formats.indptr
+    indices = unique_nodes[compacted_csc_formats.indices]
+    expected_indptr = csc_formats.indptr
+    expected_indices = csc_formats.indices
+    assert torch.equal(indptr, expected_indptr)
+    assert torch.equal(indices, expected_indices)
+    assert torch.equal(torch.sort(unique_nodes)[0], expected_original_row_ids)
 
 
 def test_compact_csc_format_hetero():
