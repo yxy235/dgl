@@ -346,7 +346,7 @@ class FusedCSCSamplingGraph(SamplingGraph):
         ), "Nodes cannot have duplicate values."
 
         _in_subgraph = self._c_csc_graph.in_subgraph(nodes)
-        return self._convert_to_sampled_subgraph(_in_subgraph)
+        return self._convert_to_fused_sampled_subgraph(_in_subgraph)
 
     def _convert_to_fused_sampled_subgraph(
         self,

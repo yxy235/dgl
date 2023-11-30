@@ -2,10 +2,10 @@
 
 from torch.utils.data import functional_datapipe
 
-from ..internal import unique_and_compact_csc_formats
+from ..internal import unique_and_compact_node_pairs
 
 from ..subgraph_sampler import SubgraphSampler
-from .sampled_subgraph_impl import SampledSubgraphImpl
+from .sampled_subgraph_impl import FusedSampledSubgraphImpl
 
 
 __all__ = ["InSubgraphSampler"]
@@ -64,8 +64,8 @@ class InSubgraphSampler(SubgraphSampler):
         (
             original_row_node_ids,
             compacted_node_pairs,
-        ) = unique_and_compact_csc_formats(subgraph.node_pairs, seeds)
-        subgraph = SampledSubgraphImpl(
+        ) = unique_and_compact_node_pairs(subgraph.node_pairs, seeds)
+        subgraph = FusedSampledSubgraphImpl(
             node_pairs=compacted_node_pairs,
             original_column_node_ids=seeds,
             original_row_node_ids=original_row_node_ids,

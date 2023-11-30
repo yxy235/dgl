@@ -144,7 +144,7 @@ class SampledSubgraph:
         assert (
             assume_num_node_within_int32
         ), "Values > int32 are not supported yet."
-        assert isinstance(self.node_pairs, CSCFormatBase) == isinstance(edges, tuple), (
+        assert isinstance(self.node_pairs, tuple) == isinstance(edges, tuple), (
             "The sampled subgraph and the edges to exclude should be both "
             "homogeneous or both heterogeneous."
         )
@@ -155,7 +155,7 @@ class SampledSubgraph:
         # 1. Convert the node pairs to the original ids if they are compacted.
         # 2. Exclude the edges and get the index of the edges to keep.
         # 3. Slice the subgraph according to the index.
-        if isinstance(self.node_pairs, CSCFormatBase):
+        if isinstance(self.node_pairs, tuple):
             reverse_edges = _to_reverse_ids(
                 self.node_pairs,
                 self.original_row_node_ids,

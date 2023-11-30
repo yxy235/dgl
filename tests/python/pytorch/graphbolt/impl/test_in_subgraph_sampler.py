@@ -30,9 +30,12 @@ def test_InSubgraphSampler_homo():
         sampled_subgraph = minibatch.sampled_subgraphs[0]
         _src = [
             sampled_subgraph.original_row_node_ids[id]
-            for id in sampled_subgraph.node_pairs.indices
+            for id in sampled_subgraph.node_pairs[0]
         ]
-        _dst = sampled_subgraph.original_column_node_ids[:len(sampled_subgraph.node_pairs.indptr)-1]
+        _dst = [
+            sampled_subgraph.original_column_node_ids[id]
+            for id in sampled_subgraph.node_pairs[1]
+        ]
         return _src, _dst
 
     mn = next(it)
